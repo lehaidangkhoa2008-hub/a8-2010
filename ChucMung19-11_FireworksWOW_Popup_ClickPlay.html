@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<title>Chúc Mừng 19/11 • Fireworks Edition</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+        font-family:'Poppins',sans-serif;
+        background:#001b44;
+        overflow:hidden;
+        height:100vh;
+        color:white;
+    }
+    .center{
+        position:absolute;
+        top:50%;left:50%;
+        transform:translate(-50%,-50%);
+        text-align:center;
+        z-index:5;
+    }
+    h1{
+        font-size:4rem;
+        font-weight:800;
+        letter-spacing:4px;
+        text-transform:uppercase;
+        background:linear-gradient(90deg,#4cc9f0,#90e0ef,#fff);
+        -webkit-background-clip:text;
+        color:transparent;
+        text-shadow:0 0 25px rgba(144,224,239,0.8);
+    }
+    .btn{
+        margin-top:20px;
+        padding:12px 28px;
+        font-size:16px;
+        font-weight:600;
+        border-radius:50px;
+        border:none;
+        cursor:pointer;
+        background:linear-gradient(90deg,#00d4ff,#2ec4ff);
+        color:#002;
+        box-shadow:0 0 20px #2ec4ff;
+        transition:.2s;
+    }
+    .btn:hover{
+        transform:scale(1.05);
+        box-shadow:0 0 35px #67e8ff;
+    }
+    #musicBtn{
+        position:fixed;
+        bottom:20px;
+        right:20px;
+        background:#00b4d8;
+        color:#002;
+        padding:12px 20px;
+        border-radius:14px;
+        cursor:pointer;
+        box-shadow:0 0 18px #29d2ff;
+        font-size:14px;
+        font-weight:600;
+        z-index:10;
+    }
+    canvas{position:absolute;top:0;left:0}
+
+    .overlay{
+        position:fixed;
+        top:0;left:0;
+        width:100%;height:100%;
+        background:rgba(0,0,20,0.65);
+        display:none;
+        align-items:center;
+        justify-content:center;
+        z-index:20;
+    }
+
+    .msgBox{
+        background:#0a1b3d;
+        padding:30px;
+        width:80%;
+        max-width:420px;
+        border-radius:20px;
+        text-align:center;
+        box-shadow:0 0 25px #66d9ff;
+        animation:fadeInScale .4s ease;
+        color:white;
+        border:2px solid #55cfff;
+    }
+    .msgBox h2{
+        margin-bottom:15px;
+        font-size:24px;
+        color:#a8eaff;
+    }
+    .msgBox p{
+        line-height:1.6;
+        font-size:15px;
+    }
+    .closeBtn{
+        margin-top:20px;
+        background:#39d5ff;
+        color:#002;
+        font-weight:bold;
+        padding:10px 20px;
+        border:none;
+        border-radius:25px;
+        cursor:pointer;
+        box-shadow:0 0 18px #39d5ff;
+        transition:0.2s;
+    }
+    .closeBtn:hover{
+        transform:scale(1.05);
+    }
+    @keyframes fadeInScale{
+        from{opacity:0;transform:scale(0.7);}
+        to{opacity:1;transform:scale(1);}
+    }
+</style>
+</head>
+
+<body>
+<canvas id="canvas"></canvas>
+
+<div class="center">
+    <h1>Chúc Mừng 19/11</h1>
+    <button class="btn" onclick="showMessage()">Nhận lời chúc</button>
+</div>
+
+<div id="msgOverlay" class="overlay">
+    <div class="msgBox">
+        <h2>💙 Lời Chúc 19/11 💙</h2>
+        <p>
+            ✨ Chúc bạn một ngày 19/11 thật rực rỡ!<br>
+            🌟 Mong bạn luôn bình an và mạnh mẽ<br>
+            🌻 Luôn được yêu thương và trân trọng<br>
+            🎉 Và mỗi khoảnh khắc đều thật tuyệt vời!<br><br>
+            Chúc bạn luôn tỏa sáng như chính bạn 💙
+        </p>
+        <button class="closeBtn" onclick="closeMessage()">Đóng</button>
+    </div>
+</div>
+
+<div id="musicBtn" onclick="toggleMusic()">🔊 Bật/Tắt nhạc</div>
+
+<audio id="bgm" loop>
+  <source src="videoplayback.m4a" type="audio/mp4">
+</audio>
+
+<script>
+const canvas=document.getElementById("canvas");
+const ctx=canvas.getContext("2d");
+let w,h;
+function resize(){w=canvas.width=innerWidth;h=canvas.height=innerHeight;}
+resize();onresize=resize;
+
+let fireworks=[],particles=[];
+function rand(a,b){return Math.random()*(b-a)+a;}
+
+class Firework{
+    constructor(){
+        this.x=rand(w*0.2,w*0.8);this.y=h;
+        this.tx=rand(0,w);this.ty=rand(0,h*0.4);
+        this.speed=5;this.angle=Math.atan2(this.ty-this.y,this.tx-this.x);
+        this.done=false;
+    }
+    update(){
+        if(!this.done){
+            this.x+=Math.cos(this.angle)*this.speed;
+            this.y+=Math.sin(this.angle)*this.speed;
+            if(Math.hypot(this.tx-this.x,this.ty-this.y)<12){
+                this.explode();this.done=true;
+            }
+        }
+    }
+    explode(){
+        for(let i=0;i<50;i++) particles.push(new Particle(this.x,this.y));
+    }
+    draw(){
+        ctx.fillStyle="#99e9ff";
+        ctx.beginPath();ctx.arc(this.x,this.y,3,0,6.28);ctx.fill();
+    }
+}
+
+class Particle{
+    constructor(x,y){
+        this.x=x;this.y=y;
+        this.speed=rand(2,6);this.angle=rand(0,6.28);
+        this.alpha=1;this.decay=rand(0.01,0.03);
+        this.color="hsl("+rand(180,220)+",100%,70%)";
+    }
+    update(){
+        this.x+=Math.cos(this.angle)*this.speed;
+        this.y+=Math.sin(this.angle)*this.speed;
+        this.alpha-=this.decay;
+        this.speed*=0.96;
+    }
+    draw(){
+        ctx.globalAlpha=this.alpha;
+        ctx.fillStyle=this.color;
+        ctx.beginPath();ctx.arc(this.x,this.y,4,0,6.28);ctx.fill();
+        ctx.globalAlpha=1;
+    }
+}
+
+function loop(){
+    ctx.fillStyle="rgba(0,0,40,0.3)";
+    ctx.fillRect(0,0,w,h);
+
+    if(Math.random()<0.03) fireworks.push(new Firework());
+
+    fireworks.forEach((f,i)=>{
+        f.update(); f.draw();
+        if(f.done) fireworks.splice(i,1);
+    });
+
+    particles.forEach((p,i)=>{
+        p.update(); p.draw();
+        if(p.alpha<=0) particles.splice(i,1);
+    });
+
+    requestAnimationFrame(loop);
+}
+loop();
+
+function showMessage(){
+    // mở popup
+    document.getElementById("msgOverlay").style.display = "flex";
+    // bật nhạc khi nhấn "Nhận lời chúc"
+    let bgm = document.getElementById("bgm");
+    if (bgm.paused){
+        bgm.play().catch(()=>{});
+    }
+}
+function closeMessage(){
+    document.getElementById("msgOverlay").style.display = "none";
+}
+
+let bgm=document.getElementById("bgm");
+function toggleMusic(){
+    if(bgm.paused) bgm.play();
+    else bgm.pause();
+}
+</script>
+
+</body>
+</html>
